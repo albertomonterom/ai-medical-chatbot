@@ -9,73 +9,147 @@
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css')}}"/>
 	</head>
 	
 	
 	<body>
-		<div class="container-fluid h-100">
-			<div class="row justify-content-center h-100">		
-				<div class="col-md-8 col-xl-6 chat">
-					<div class="card">
-						<div class="card-header msg_head">
-							<div class="d-flex bd-highlight">
-								<div class="img_cont">
-									<img src="https://cdn-icons-png.flaticon.com/512/387/387569.png" class="rounded-circle user_img">
-									<!-- <img src="https://www.prdistribution.com/spirit/uploads/pressreleases/2019/newsreleases/d83341deb75c4c4f6b113f27b1e42cd8-chatbot-florence-already-helps-thousands-of-patients-to-remember-their-medication.png" class="rounded-circle user_img"> -->
-									<span class="online_icon"></span>
-								</div>
-								<div class="user_info">
-									<span>Medical Chatbot</span>
-									<p>Ask me anything!</p>
-								</div>
+		<div class="container-fluid">
+			<div class="row justify-content-center align-items-center min-vh-100">
+				<div class="col-md-10 col-xl-7">
+					<div class="chat-shell">
+						<!-- Header -->
+						<header class="chat-header">
+							<div class="avatar">
+								<img src="https://cdn-icons-png.flaticon.com/512/387/387569.png" alt="bot"/>
+								<span class="status online"></span>
 							</div>
-						</div>
-						<div id="messageFormeight" class="card-body msg_card_body">
-							
-							
-						</div>
-						<div class="card-footer">
-							<form id="messageArea" class="input-group">
-                                <input type="text" id="text" name="msg" placeholder="Type your message..." autocomplete="off" class="form-control type_msg" required/>
-								<div class="input-group-append">
-									<button type="submit" id="send" class="input-group-text send_btn"><i class="fas fa-location-arrow"></i></button>
-								</div>
+							<div class="title">
+								<h1>Medical Chatbot</h1>
+								<p>Ask me anything!</p>
+							</div>
+						</header>
+
+						<!-- Mensajes -->
+						<main id="messages" class="chat-body">
+							<!-- aquí se inyectan las burbujas -->
+						</main>
+
+						<!-- Input -->
+						<footer class="chat-input">
+							<form id="messageArea" class="composer">
+								<input id="text" name="msg" type="text" placeholder="Type your message..." autocomplete="off" required/>
+								<button id="send" type="submit" aria-label="Send">
+									<i class="fas fa-location-arrow"></i>
+								</button>
 							</form>
-						</div>
+						</footer>
+
 					</div>
 				</div>
 			</div>
 		</div>
+
 		
 		<script>
-			$(document).ready(function() {
-				$("#messageArea").on("submit", function(event) {
-					const date = new Date();
-					const hour = date.getHours();
-					const minute = date.getMinutes();
-					const str_time = hour+":"+minute;
-					var rawText = $("#text").val();
+			$(function () {
+				const $messages = $("#messages");
 
-					var userHtml = '<div class="d-flex justify-content-end mb-4"><div class="msg_cotainer_send">' + rawText + '<span class="msg_time_send">'+ str_time + '</span></div><div class="img_cont_msg"><img src="https://i.ibb.co/d5b84Xw/Untitled-design.png" class="rounded-circle user_img_msg"></div></div>';
-					
-					$("#text").val("");
-					$("#messageFormeight").append(userHtml);
+				const BOT_AVATAR  = "https://cdn-icons-png.flaticon.com/512/387/387569.png";
+				const USER_AVATAR = "https://i.ibb.co/d5b84Xw/Untitled-design.png";
 
-					$.ajax({
-						data: {
-							msg: rawText,	
-						},
-						type: "POST",
-						url: "/get",
-					}).done(function(data) {
-						var botHtml = '<div class="d-flex justify-content-start mb-4"><div class="img_cont_msg"><img src="https://cdn-icons-png.flaticon.com/512/387/387569.png" class="rounded-circle user_img_msg"></div><div class="msg_cotainer">' + data + '<span class="msg_time">' + str_time + '</span></div></div>';
-						$("#messageFormeight").append($.parseHTML(botHtml));
-					});
-					event.preventDefault();
+				const BOT_NAME  = "Medical Chatbot";
+				const USER_NAME = "User"; // cámbialo si quieres mostrar tu nombre
+
+				function nowHHMM(){
+				const d = new Date();
+				const hh = String(d.getHours()).padStart(2,'0');
+				const mm = String(d.getMinutes()).padStart(2,'0');
+				return `${hh}:${mm}`;
+				}
+
+				function metaLine(name){
+				return `
+					<div class="meta-top">
+					<span class="name">${name}</span>
+					<span class="time">${nowHHMM()}</span>
+					</div>`;
+				}
+
+				function esc(text){
+				return $("<div>").text(text).html();
+				}
+
+				function scrollToBottom(){
+				$messages.stop().animate({ scrollTop: $messages[0].scrollHeight }, 250);
+				}
+
+				$("#messageArea").on("submit", function (event) {
+				event.preventDefault();
+				const rawText = $("#text").val().trim();
+				if(!rawText) return;
+
+				// ===== Usuario =====
+				const userHtml = `
+					<div class="msg-row user">
+					<div class="bubble">
+						${metaLine(USER_NAME)}
+						${esc(rawText)}
+					</div>
+					<div class="avatar-sm"><img src="${USER_AVATAR}" alt="you"></div>
+					</div>`;
+				$("#text").val("");
+				$messages.append(userHtml);
+				scrollToBottom();
+
+				// typing opcional
+				const typingId = "bot-typing";
+				$messages.append(`
+					<div id="${typingId}" class="msg-row bot">
+					<div class="avatar-sm"><img src="${BOT_AVATAR}" alt="bot"></div>
+					<div class="bubble typing">
+						<div class="meta-top">
+						<span class="name">${BOT_NAME}</span>
+						<span class="time">${nowHHMM()}</span>
+						</div>
+						<span class="dot"></span><span class="dot"></span><span class="dot"></span>
+					</div>
+					</div>`);
+				scrollToBottom();
+
+				// request
+				$.ajax({
+					data: { msg: rawText },
+					type: "POST",
+					url: "/get",
+				}).done(function (data) {
+					$("#"+typingId).remove();
+					const botHtml = `
+					<div class="msg-row bot">
+						<div class="avatar-sm"><img src="${BOT_AVATAR}" alt="bot"></div>
+						<div class="bubble">
+						${metaLine(BOT_NAME)}
+						${data}
+						</div>
+					</div>`;
+					$messages.append(botHtml);
+					scrollToBottom();
+				}).fail(function(){
+					$("#"+typingId).remove();
+					$messages.append(`
+					<div class="msg-row bot">
+						<div class="avatar-sm"><img src="${BOT_AVATAR}" alt="bot"></div>
+						<div class="bubble">
+						${metaLine(BOT_NAME)}
+						<em>There was a problem. Try again.</em>
+						</div>
+					</div>`);
+					scrollToBottom();
+				});
 				});
 			});
 		</script>
-        
+
     </body>
 </html>
