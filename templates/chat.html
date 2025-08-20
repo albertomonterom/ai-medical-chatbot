@@ -60,7 +60,15 @@
 				const USER_AVATAR = "https://i.ibb.co/d5b84Xw/Untitled-design.png";
 
 				const BOT_NAME  = "Medical Chatbot";
-				const USER_NAME = "User"; // cámbialo si quieres mostrar tu nombre
+				const USER_NAME = "User";
+
+				// ----- SESSION_ID (memory) -----
+				const SID_KEY = "chat_session_id";
+				if (!localStorage.getItem(SID_KEY)) {
+				const sid = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+				localStorage.setItem(SID_KEY, sid);
+				}
+				const SESSION_ID = localStorage.getItem(SID_KEY);
 
 				function nowHHMM(){
 				const d = new Date();
@@ -120,7 +128,10 @@
 
 				// request
 				$.ajax({
-					data: { msg: rawText },
+					data: {
+						msg: rawText,
+						session_id: SESSION_ID
+					},
 					type: "POST",
 					url: "/get",
 				}).done(function (data) {
