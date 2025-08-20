@@ -16,7 +16,7 @@ python -m venv medchat
 ```
 
 
-### Activate it
+Activate it
 
 ```bash
 source medchat/bin/activate   # Linux/Mac
