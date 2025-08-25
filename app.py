@@ -9,7 +9,6 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 from dotenv import load_dotenv, find_dotenv
 from src.prompt import *
-import streamlit as st
 import os
 
 
@@ -17,14 +16,9 @@ app = Flask(__name__)
 
 
 # ---------- Env ----------
-try:
-    PINECONE_API_KEY = st.secrets["PINECONE_API_KEY"]
-    OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
-except Exception:
-    load_dotenv(find_dotenv())
-    PINECONE_API_KEY=os.environ.get('PINECONE_API_KEY')
-    OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY')
-
+load_dotenv(find_dotenv())
+PINECONE_API_KEY=os.environ.get('PINECONE_API_KEY')
+OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY')
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
